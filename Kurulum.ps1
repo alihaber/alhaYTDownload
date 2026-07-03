@@ -1,10 +1,11 @@
 # Alha YouTube Downloader - Otomatik Kurulum
 # Admin yetkisi GEREKMEZ (HKCU + AppData kullanilir)
-[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 param(
     [switch]$Silent
 )
+
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 $ErrorActionPreference = 'Stop'
 $EXTENSION_ID = 'gnfdbpoiocdehodkgfgckmhcibpaoobk'
