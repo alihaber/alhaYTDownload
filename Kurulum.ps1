@@ -2,6 +2,10 @@
 # Admin yetkisi GEREKMEZ (HKCU + AppData kullanilir)
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
+param(
+    [switch]$Silent
+)
+
 $ErrorActionPreference = 'Stop'
 $EXTENSION_ID = 'gnfdbpoiocdehodkgfgckmhcibpaoobk'
 $HOST_NAME    = 'com.alha.ytube.download.host'
@@ -49,7 +53,8 @@ foreach ($check in @(
 )) {
     if (-not (Test-Path $check.P)) {
         Log ("HATA: " + $check.N + " bulunamadi! ZIP tam mi cikartildi?") 'Red'
-        Read-Host 'Kapatmak icin Enter a basin'; exit 1
+        if (-not $Silent) { Read-Host 'Kapatmak icin Enter a basin' }
+        exit 1
     }
 }
 Log '   [OK] Tum dosyalar mevcut.' 'Green'
@@ -61,16 +66,30 @@ Stop-Process -Name 'NativeHost' -Force -ErrorAction SilentlyContinue
 Start-Sleep -Milliseconds 500
 
 New-Item -ItemType Directory -Force -Path $InstallPath | Out-Null
-Copy-Item $hostSrc   "$InstallPath\alha-ytdlp-host.exe" -Force
-Copy-Item $ytdlpSrc  "$InstallPath\yt-dlp.exe"          -Force
-Copy-Item $ffmpegSrc "$InstallPath\ffmpeg.exe"           -Force
+
+function Safe-Copy($src, $dest) {
+    if ($src -and (Test-Path $src)) {
+        $srcFull = (Get-Item $src).FullName
+        $destFull = $null
+        if (Test-Path $dest) { $destFull = (Get-Item $dest).FullName }
+        if ($srcFull -ne $destFull) {
+            Copy-Item $src $dest -Force
+        }
+    }
+}
+
+Safe-Copy $hostSrc   "$InstallPath\alha-ytdlp-host.exe"
+Safe-Copy $ytdlpSrc  "$InstallPath\yt-dlp.exe"
+Safe-Copy $ffmpegSrc "$InstallPath\ffmpeg.exe"
 Log '   [OK] Motor dosyalari kopyalandi.' 'Green'
 
 # ─── 3. Eklenti dosyalarini kopyala ──────────────────────────────────────
 Log '3. Eklenti dosyalari hazirlanıyor...' 'Yellow'
 $ExtInstallPath = "$InstallPath\extension"
-if (Test-Path $ExtInstallPath) { Remove-Item $ExtInstallPath -Recurse -Force }
-Copy-Item $extSrc $ExtInstallPath -Recurse -Force
+if ((Get-Item $extSrc).FullName -ne (Get-Item $ExtInstallPath -ErrorAction SilentlyContinue).FullName) {
+    if (Test-Path $ExtInstallPath) { Remove-Item $ExtInstallPath -Recurse -Force }
+    Copy-Item $extSrc $ExtInstallPath -Recurse -Force
+}
 Log '   [OK] Eklenti dosyalari kopyalandi.' 'Green'
 
 # ─── 4. Native Messaging Host (HKCU - admin gerekmez) ────────────────────
@@ -176,4 +195,6 @@ else {
     Log ('  butonuyla su klasoru secin: ' + $ExtInstallPath) 'Cyan'
 }
 Log ''
-Read-Host 'Kapatmak icin Enter a basin'
+if (-not $Silent) {
+    Read-Host 'Kapatmak icin Enter a basin'
+}
