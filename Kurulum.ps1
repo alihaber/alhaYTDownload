@@ -24,6 +24,20 @@ $InstallPath  = "$env:LOCALAPPDATA\Alha\YoutubeDownloader"
 # ─── 1. Kaynak dosya kontrolu ─────────────────────────────────────────────
 Log '1. Dosyalar kontrol ediliyor...' 'Yellow'
 
+function Download-Dependency($url, $dest) {
+    Log ("   [..] " + (Split-Path -Leaf $dest) + " bulunamadi, internetten indiriliyor...") 'Yellow'
+    try {
+        [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
+        $webClient = New-Object System.Net.WebClient
+        $webClient.Headers.Add("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
+        $webClient.DownloadFile($url, $dest)
+        Log ("   [OK] " + (Split-Path -Leaf $dest) + " basariyla indirildi.") 'Green'
+    }
+    catch {
+        Log ("   [!] Bağımlılık indirilemedi: " + $_.Exception.Message) 'Red'
+    }
+}
+
 $hostSrc = @(
     "$ScriptDir\alha-ytdlp-host.exe",
     "$ScriptDir\NativeHost.exe",
@@ -31,34 +45,47 @@ $hostSrc = @(
     "$ScriptDir\native_host\NativeHost.exe"
 ) | Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1
 
-$ytdlpSrc = @(
-    "$ScriptDir\yt-dlp.exe",
-    "$ScriptDir\native_host\yt-dlp.exe"
-) | Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1
-
-$ffmpegSrc = @(
-    "$ScriptDir\ffmpeg.exe",
-    "$ScriptDir\native_host\ffmpeg.exe"
-) | Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1
-
 $extSrc = @(
     "$ScriptDir\chrome_extension",
     "$ScriptDir\..\chrome_extension"
 ) | Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1
 
-foreach ($check in @(
-    @{P=$hostSrc;  N='alha-ytdlp-host.exe'},
-    @{P=$ytdlpSrc; N='yt-dlp.exe'},
-    @{P=$ffmpegSrc;N='ffmpeg.exe'},
-    @{P=$extSrc;   N='chrome_extension klasoru'}
-)) {
-    if (-not (Test-Path $check.P)) {
-        Log ("HATA: " + $check.N + " bulunamadi! ZIP tam mi cikartildi?") 'Red'
-        if (-not $Silent) { Read-Host 'Kapatmak icin Enter a basin' }
-        exit 1
-    }
+if (-not $hostSrc -or -not (Test-Path $hostSrc) -or -not $extSrc -or -not (Test-Path $extSrc)) {
+    Log "HATA: Kritik eklenti veya host dosyalari bulunamadi! Kurulum tamamlanamiyor." 'Red'
+    if (-not $Silent) { Read-Host 'Kapatmak icin Enter a basin' }
+    exit 1
 }
-Log '   [OK] Tum dosyalar mevcut.' 'Green'
+
+# Bağımlılıkları kontrol et ve gerekirse indir
+$ytdlpSrc = @(
+    "$ScriptDir\yt-dlp.exe",
+    "$ScriptDir\native_host\yt-dlp.exe",
+    "$InstallPath\yt-dlp.exe"
+) | Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1
+
+if (-not $ytdlpSrc) {
+    New-Item -ItemType Directory -Force -Path $InstallPath | Out-Null
+    $ytdlpSrc = "$InstallPath\yt-dlp.exe"
+    Download-Dependency "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe" $ytdlpSrc
+}
+
+$ffmpegSrc = @(
+    "$ScriptDir\ffmpeg.exe",
+    "$ScriptDir\native_host\ffmpeg.exe",
+    "$InstallPath\ffmpeg.exe"
+) | Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1
+
+if (-not $ffmpegSrc) {
+    New-Item -ItemType Directory -Force -Path $InstallPath | Out-Null
+    $ffmpegSrc = "$InstallPath\ffmpeg.exe"
+    Download-Dependency "https://github.com/alihaber/alhaYTDownload/releases/download/v1.0.9/ffmpeg.exe" $ffmpegSrc
+}
+
+if (-not (Test-Path $ytdlpSrc) -or -not (Test-Path $ffmpegSrc)) {
+    Log "   [!] UYARI: Bağımlılıklar eksik veya indirilemedi. İnternet bağlantınızı kontrol edin." 'Yellow'
+} else {
+    Log '   [OK] Tum dosyalar ve bagimliliklar kontrol edildi.' 'Green'
+}
 
 # ─── 2. Motor dosyalarini kopyala ─────────────────────────────────────────
 Log '2. Motor dosyalari kopyalaniyor...' 'Yellow'
