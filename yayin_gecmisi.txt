@@ -9,3 +9,4 @@ Versiyon: v1.0.5 | Tarih: 2026-07-03 03:00:58 | Durum: Basarili
 Versiyon: v1.0.6 | Tarih: 2026-07-03 03:07:39 | Durum: Basarili
 Versiyon: v1.0.6 | Tarih: 2026-07-03 03:21:27 | Durum: Basarili
 Versiyon: v1.0.7 | Tarih: 2026-07-03 03:30:34 | Durum: Basarili
+Versiyon: v1.0.8 | Tarih: 2026-07-03 03:33:47 | Durum: Basarili
