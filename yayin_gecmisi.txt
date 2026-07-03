@@ -1,0 +1,8 @@
+=== Alha YouTube Downloader Yayin Gecmisi ===
+
+Versiyon: v1.0.0 | Tarih: 2026-07-03 02:18:42 | Durum: Basarili
+Versiyon: v1.0.1 | Tarih: 2026-07-03 02:28:26 | Durum: Basarili
+Versiyon: v1.0.2 | Tarih: 2026-07-03 02:38:57 | Durum: Basarili
+Versiyon: v1.0.3 | Tarih: 2026-07-03 02:42:06 | Durum: Basarili
+Versiyon: v1.0.4 | Tarih: 2026-07-03 02:54:13 | Durum: Basarili
+Versiyon: v1.0.5 | Tarih: 2026-07-03 03:00:58 | Durum: Basarili
